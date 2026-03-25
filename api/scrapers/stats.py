@@ -61,10 +61,11 @@ async def vlr_stats(region_key: str, timespan: str):
         validate_timespan(timespan)
 
         base_url = (
-            f"{VLR_STATS_URL}/?event_group_id=all&event_id=all"
+            f"{VLR_STATS_URL}?event_group_id=all&event_id=all"
             f"&region={region_key}&country=all&min_rounds=200"
             f"&min_rating=1550&agent=all&map_id=all"
         )
+
         url = (
             f"{base_url}&timespan=all"
             if timespan.lower() == "all"
@@ -72,7 +73,21 @@ async def vlr_stats(region_key: str, timespan: str):
         )
 
         client = get_http_client()
-        resp = await fetch_with_retries(url, client=client)
+        # vlr.gg returns 302 to /stats (losing query params) on first visit.
+        # Disable auto-redirect and manually follow to preserve query params.
+        resp = await client.get(url, follow_redirects=False)
+
+        if resp.status_code == 302:
+            location = resp.headers.get("location", "")
+            # If redirected to bare /stats, retry with original URL
+            if location == "/stats" or location.rstrip("/") == VLR_STATS_URL.rstrip("/"):
+                resp = await fetch_with_retries(url, client=client)
+            else:
+                # Follow the redirect location
+                resp = await fetch_with_retries(location, client=client)
+        elif resp.status_code != 200:
+            resp = await fetch_with_retries(url, client=client)
+
         html = HTMLParser(resp.text)
         status = resp.status_code
 

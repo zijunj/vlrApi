@@ -7,7 +7,7 @@ VLR_BASE_URL = "https://www.vlr.gg"
 VLR_EVENTS_URL = f"{VLR_BASE_URL}/events"
 VLR_MATCHES_URL = f"{VLR_BASE_URL}/matches"
 VLR_RANKINGS_URL = f"{VLR_BASE_URL}/rankings"
-VLR_STATS_URL = f"{VLR_BASE_URL}/stats"
+VLR_STATS_URL = f"{VLR_BASE_URL}/stats/"
 VLR_NEWS_URL = f"{VLR_BASE_URL}/news"
 
 # Rate limiting
