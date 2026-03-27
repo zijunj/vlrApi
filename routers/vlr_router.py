@@ -44,6 +44,7 @@ async def VLR_stats(
     request: Request,
     region: str = Query(..., description="Region shortname"),
     timespan: str = Query(..., description="Timespan (30, 60, 90, or all)"),
+    event_group_id: str = Query(..., description="VLR event group id filter"),
 ):
     """
     Get VLR stats with query parameters.
@@ -57,7 +58,7 @@ async def VLR_stats(
         "oce": "oceania",\n
         "mn": "mena"\n
     """
-    return await get_stats_data(region, timespan)
+    return await get_stats_data(region, timespan, event_group_id)
 
 
 @router.get("/rankings")

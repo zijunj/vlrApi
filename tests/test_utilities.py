@@ -9,7 +9,13 @@ from fastapi import HTTPException
 from utils.pagination import PaginationConfig, scrape_multiple_pages
 from utils.http_client import fetch_with_retries
 from utils.html_parsers import parse_eta_to_timedelta
-from utils.error_handling import validate_region, validate_timespan, validate_match_query, validate_event_query
+from utils.error_handling import (
+    validate_event_group_id,
+    validate_event_query,
+    validate_match_query,
+    validate_region,
+    validate_timespan,
+)
 from utils.cache_manager import CacheManager, cache_manager
 from utils.constants import CACHE_TTL_EVENTS, CACHE_TTL_MATCH_DETAIL
 from api.scrapers.events import vlr_events
@@ -75,6 +81,7 @@ class TestValidators:
     def test_validate_region_valid(self):
         assert validate_region("na") == "north-america"
         assert validate_region("eu") == "europe"
+        assert validate_region("all", allow_all=True) == "all"
 
     def test_validate_region_invalid(self):
         with pytest.raises(HTTPException) as exc_info:
@@ -89,6 +96,18 @@ class TestValidators:
         with pytest.raises(HTTPException) as exc_info:
             validate_timespan("45")
         assert exc_info.value.status_code == 400
+
+    def test_validate_event_group_id_valid(self):
+        for event_group_id in ("all", "123", "9999"):
+            validate_event_group_id(event_group_id)
+
+    def test_validate_event_group_id_invalid(self):
+        with pytest.raises(HTTPException) as exc_info:
+            validate_event_group_id("abc")
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail == (
+            "Invalid event_group_id 'abc'. Valid values: all, numeric ID"
+        )
 
     def test_validate_match_query_valid(self):
         for q in ("upcoming", "upcoming_extended", "live_score", "results"):

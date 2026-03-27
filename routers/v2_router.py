@@ -63,13 +63,14 @@ async def v2_stats(
     request: Request,
     region: str = Query(..., description="Region shortname (na, eu, ap, la, etc.)"),
     timespan: str = Query(..., description="Timespan: 30, 60, 90, or all"),
+    event_group_id: str = Query(..., description="VLR event group id filter"),
 ):
     """
     Get player statistics for a region and timespan.
 
     Region shortnames: na, eu, ap, la, la-s, la-n, oce, kr, mn, gc, br, cn, jp, col
     """
-    result = await get_stats_data(region, timespan)
+    result = await get_stats_data(region, timespan, event_group_id)
     return _wrap_v2(result)
 
 

@@ -58,12 +58,18 @@ def handle_scraper_errors(func):
         return wrapper
 
 
-def validate_region(key: str) -> str:
+def validate_region(key: str, allow_all: bool = False) -> str:
     """Validate region key and return the full region name. Raises 400 on invalid."""
+    if allow_all and key == "all":
+        return "all"
+
     if key not in region:
+        valid_regions = sorted(region.keys())
+        if allow_all:
+            valid_regions.append("all")
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid region '{key}'. Valid regions: {', '.join(sorted(region.keys()))}",
+            detail=f"Invalid region '{key}'. Valid regions: {', '.join(valid_regions)}",
         )
     return region[key]
 
@@ -75,6 +81,17 @@ def validate_timespan(ts: str):
             status_code=400,
             detail=f"Invalid timespan '{ts}'. Valid values: {', '.join(sorted(VALID_TIMESPANS))}",
         )
+
+
+def validate_event_group_id(event_group_id: str):
+    """Validate VLR event group id. Raises 400 on invalid."""
+    if event_group_id == "all" or event_group_id.isdigit():
+        return
+
+    raise HTTPException(
+        status_code=400,
+        detail=f"Invalid event_group_id '{event_group_id}'. Valid values: all, numeric ID",
+    )
 
 
 def validate_match_query(q: str):

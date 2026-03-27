@@ -5,7 +5,12 @@ from selectolax.parser import HTMLParser
 from utils.http_client import fetch_with_retries, get_http_client
 from utils.constants import VLR_STATS_URL, CACHE_TTL_STATS
 from utils.cache_manager import cache_manager
-from utils.error_handling import handle_scraper_errors, validate_region, validate_timespan
+from utils.error_handling import (
+    handle_scraper_errors,
+    validate_event_group_id,
+    validate_region,
+    validate_timespan,
+)
 from utils.html_parsers import extract_text_content
 
 logger = logging.getLogger(__name__)
@@ -55,13 +60,14 @@ def _parse_stats_row(item) -> dict:
 
 
 @handle_scraper_errors
-async def vlr_stats(region_key: str, timespan: str):
+async def vlr_stats(region_key: str, timespan: str, event_group_id: str = "all"):
     async def build():
-        validate_region(region_key)
+        validate_region(region_key, allow_all=True)
         validate_timespan(timespan)
+        validate_event_group_id(event_group_id)
 
         base_url = (
-            f"{VLR_STATS_URL}?event_group_id=all&event_id=all"
+            f"{VLR_STATS_URL}?event_group_id={event_group_id}&event_id=all"
             f"&region={region_key}&country=all&min_rounds=200"
             f"&min_rating=1550&agent=all&map_id=all"
         )
@@ -105,5 +111,5 @@ async def vlr_stats(region_key: str, timespan: str):
         return data
 
     return await cache_manager.get_or_create_async(
-        CACHE_TTL_STATS, build, "stats", region_key, timespan
+        CACHE_TTL_STATS, build, "stats", region_key, timespan, event_group_id
     )
